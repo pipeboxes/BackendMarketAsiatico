@@ -1,0 +1,147 @@
+openapi: 3.0.0
+info:
+  title: API de Gestión de Usuarios, Productos y Ventas
+  version: 1.0.0
+  description: API para gestionar registro y autenticación de usuarios, mantenedor de categorías y productos, y registro de ventas.
+
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor local
+
+paths:
+  /usuarios/register:
+    post:
+      summary: Registrar un nuevo usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                correo:
+                  type: string
+                  example: usuario@example.com
+                clave:
+                  type: string
+                  example: "12345"
+      responses:
+        '201':
+          description: Usuario creado exitosamente
+        '400':
+          description: Error en los datos proporcionados
+
+  /usuarios/login:
+    post:
+      summary: Autenticación de usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                correo:
+                  type: string
+                  example: usuario@example.com
+                clave:
+                  type: string
+                  example: "12345"
+      responses:
+        '200':
+          description: Inicio de sesión exitoso
+        '401':
+          description: Credenciales inválidas
+
+  /categorias:
+    get:
+      summary: Listar categorías
+      responses:
+        '200':
+          description: Lista de categorías
+    post:
+      summary: Crear una nueva categoría
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                  example: Moda masculina
+      responses:
+        '201':
+          description: Categoría creada exitosamente
+        '400':
+          description: Error en los datos proporcionados
+
+  /productos:
+    get:
+      summary: Listar productos
+      responses:
+        '200':
+          description: Lista de productos
+    post:
+      summary: Crear un nuevo producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                  example: Crema hidratante facial
+                descripcion:
+                  type: string
+                  example: Crema hidratante para piel seca con ingredientes naturales.
+                precio:
+                  type: number
+                  example: 15000
+                categoria:
+                  type: string
+                  example: Skincare
+      responses:
+        '201':
+          description: Producto creado exitosamente
+        '400':
+          description: Error en los datos proporcionados
+
+  /ventas:
+    post:
+      summary: Registrar una nueva venta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usuario:
+                  type: string
+                  example: usuario@example.com
+                productos:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      nombre:
+                        type: string
+                        example: Crema hidratante facial
+                      cantidad:
+                        type: integer
+                        example: 2
+                total:
+                  type: number
+                  example: 30000
+      responses:
+        '201':
+          description: Venta registrada exitosamente
+        '400':
+          description: Error en los datos proporcionados
