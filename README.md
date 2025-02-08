@@ -11,31 +11,43 @@ Felipe Cajas - Back-End Developer
 
 Tecnologías utilizadas:
 
-Frontend:
+Frontend: https://github.com/Catherinne16/ProyectoFinalDL
 
 React
+
 JavaScript
+
 CSS
+
 React Router
+
 React Icons
+
 Vite
 
-Backend: https://github.com/pipeboxes/BackendMarketAsiatico
+Backend:  https://github.com/pipeboxes/BackendMarketAsiatico
 
 Express
+
 Node.js
+
 PostgreSQL
+
 JWT (JSON Web Token) para la autenticación
 
 
 Testing:
 
 Jest
+
 Cypress
+
 Postman
+
 Otros:
 
 Git / GitHub
+
 Figma (para diseño)
 
 ° Crea tu archivo .env:
