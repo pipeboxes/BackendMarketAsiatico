@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const jwt = require('jsonwebtoken');
 
 const registerSchema = Joi.object({
   correo: Joi.string().email().required(), 
@@ -10,6 +11,23 @@ const loginSchema = Joi.object({
   clave: Joi.string().min(4).required(),
 });
 
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization'];
+
+  if (!token) {
+    return res.status(403).json({ error: "Token no proporcionado" });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: "Token inválido" });
+    }
+
+    req.userId = decoded.id;
+    next();
+  });
+};
+
 const schemaValidator = (schema) => (req, res, next) => {
   const { error } = schema.validate(req.body);
   if (error) {
@@ -18,4 +36,4 @@ const schemaValidator = (schema) => (req, res, next) => {
   next();
 };
 
-module.exports = { schemaValidator, registerSchema, loginSchema };
+module.exports = {verifyToken, schemaValidator, registerSchema, loginSchema };

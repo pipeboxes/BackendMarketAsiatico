@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const pool = require("../config/config.js");
 const bcrypt = require("bcryptjs");
+const { verifyToken } = require("../middlewares/schemaValidator.js")
 
 const registerUser = async (req, res) => {
   const { correo, clave } = req.body;
@@ -50,23 +51,6 @@ const loginUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Error en el servidor" });
   }
-};
-
-const verifyToken = (req, res, next) => {
-  const token = req.headers['authorization'];
-
-  if (!token) {
-    return res.status(403).json({ error: "Token no proporcionado" });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ error: "Token inválido" });
-    }
-
-    req.userId = decoded.id;
-    next();
-  });
 };
 
 const getCategorias = async (req, res) => {
@@ -147,5 +131,4 @@ module.exports = {
   getProductos,
   createProducto,
   createVenta,
-  verifyToken,
 };
