@@ -3,9 +3,12 @@ Este proyecto es un marketplace con temática asiática (japonesa/coreana) donde
 
 Integrantes:
 Jennifer Díaz - QA Tester & Front-End Developer Jr.
+
 Carolina Cajas - Front-End Developer
+
 Felipe Cajas - Back-End Developer
-Tecnologías utilizadas
+
+Tecnologías utilizadas:
 
 Frontend:
 
