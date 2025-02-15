@@ -1,7 +1,10 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const pool = require("../config/config.js");
 const bcrypt = require("bcryptjs");
-const { verifyToken } = require("../middlewares/schemaValidator.js")
+const { verifyToken } = require("../middlewares/schemaValidator.js");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 
 const registerUser = async (req, res) => {
   const { correo, clave } = req.body;
@@ -9,7 +12,7 @@ const registerUser = async (req, res) => {
   if (!correo || !clave) {
     return res.status(400).json({ error: "Faltan datos" });
   }
-  if (typeof clave !== 'string') {
+  if (typeof clave !== "string") {
     return res.status(400).json({ error: "La clave debe ser una cadena de texto" });
   }
   try {
@@ -22,7 +25,7 @@ const registerUser = async (req, res) => {
     res.status(201).json({ message: "Usuario creado exitosamente", usuario: result.rows[0] });
   } catch (error) {
     console.error(error);
-  res.status(500).json({ error: "Error en el servidor", details: error.message });
+    res.status(500).json({ error: "Error en el servidor", details: error.message });
   }
 };
 
@@ -44,7 +47,7 @@ const loginUser = async (req, res) => {
     }
 
     const token = jwt.sign({ id: usuario.id, correo: usuario.correo }, process.env.JWT_SECRET, {
-      expiresIn: '1h'
+      expiresIn: "1h",
     });
 
     res.status(200).json({ message: "Inicio de sesión exitoso", token });
@@ -87,18 +90,32 @@ const getProductos = async (req, res) => {
 };
 
 const createProducto = async (req, res) => {
-  const { nombre, descripcion, precio, categoria } = req.body;
-
-  if (!nombre || !descripcion || !precio || !categoria) {
-    return res.status(400).json({ error: "Faltan datos" });
-  }
-
   try {
-    const result = await pool.query(
-      "INSERT INTO productos (nombre, descripcion, precio, categoria) VALUES ($1, $2, $3, $4) RETURNING *",
-      [nombre, descripcion, precio, categoria]
+    const { nombre, descripcion, precio, categoria } = req.body;
+
+    if (!nombre || !descripcion || !precio || !categoria || !req.file) {
+      return res.status(400).json({ error: "Faltan datos" });
+    }
+
+    // Subir imagen a Cloudinary
+    const uploadResult = await cloudinary.uploader.upload_stream(
+      { folder: "productos" },
+      async (error, result) => {
+        if (error) return res.status(500).json({ error: "Error al subir la imagen" });
+
+        try {
+          const queryResult = await pool.query(
+            "INSERT INTO productos (nombre, descripcion, precio, categoria, imagen) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            [nombre, descripcion, precio, categoria, result.secure_url]
+          );
+          res.status(201).json({ message: "Producto creado exitosamente", producto: queryResult.rows[0] });
+        } catch (dbError) {
+          res.status(500).json({ error: "Error en la base de datos" });
+        }
+      }
     );
-    res.status(201).json({ message: "Producto creado exitosamente", producto: result.rows[0] });
+
+    uploadResult.end(req.file.buffer);
   } catch (error) {
     res.status(500).json({ error: "Error en el servidor" });
   }
@@ -131,4 +148,5 @@ module.exports = {
   getProductos,
   createProducto,
   createVenta,
+  upload,
 };
