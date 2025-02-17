@@ -1,4 +1,4 @@
-const pool = require("../src/config/config.js")
+const { pool } = require("../src/config/config.js"); 
 
 async function testConnection() {
   try {
@@ -7,7 +7,7 @@ async function testConnection() {
   } catch (err) {
     console.error("Error conectando a la DB:", err);
   } finally {
-    pool.end();
+    await pool.end();
   }
 }
 

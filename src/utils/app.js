@@ -10,6 +10,6 @@ app.use(cors());
 
 app.use('/api', schemasValidator, userRouter);
 
-app.listen(3000, () => console.log("Servidor corriendo en http://localhost:3000"));
+app.listen(3000, () => console.log("Servidor corriendo en http://localhost:10000"));
 
 module.exports = app;
