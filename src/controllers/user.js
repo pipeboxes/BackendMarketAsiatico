@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const pool = require("../config/config.js");
+const { pool } = require("../config/config.js");
 const bcrypt = require("bcryptjs");
 const { verifyToken } = require("../middlewares/schemaValidator.js");
 const cloudinary = require("cloudinary").v2;
