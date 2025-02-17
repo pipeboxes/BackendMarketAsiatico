@@ -2,8 +2,6 @@ const express = require("express");
 const {
   registerUser,
   loginUser,
-  getCategorias,
-  createCategoria,
   getProductos,
   createProducto,
   createVenta,
@@ -16,9 +14,6 @@ const router = express.Router();
 
 router.post("/register", schemaValidator(registerSchema), registerUser);
 router.post("/login", schemaValidator(loginSchema), loginUser);
-
-router.get("/categorias", getCategorias);
-router.post("/categorias", createCategoria);
 
 router.get("/productos", verifyToken, getProductos);
 router.post("/productos", verifyToken, upload.single("image"), createProducto);

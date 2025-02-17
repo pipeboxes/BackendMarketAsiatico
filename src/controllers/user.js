@@ -13,9 +13,7 @@ const registerUser = async (req, res) => {
     return res.status(400).json({ error: "Faltan datos" });
   }
   if (typeof clave !== "string") {
-    return res
-      .status(400)
-      .json({ error: "La clave debe ser una cadena de texto" });
+    return res.status(400).json({ error: "La clave debe ser una cadena de texto" });
   }
   try {
     const hash = await bcrypt.hash(clave, 10);
@@ -24,17 +22,13 @@ const registerUser = async (req, res) => {
       [correo, hash]
     );
 
-    res
-      .status(201)
-      .json({
-        message: "Usuario creado exitosamente",
-        usuario: result.rows[0],
-      });
+    res.status(201).json({
+      message: "Usuario creado exitosamente",
+      usuario: result.rows[0],
+    });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ error: "Error en el servidor", details: error.message });
+    res.status(500).json({ error: "Error en el servidor", details: error.message });
   }
 };
 
@@ -42,10 +36,7 @@ const loginUser = async (req, res) => {
   const { correo, clave } = req.body;
 
   try {
-    const result = await pool.query(
-      "SELECT * FROM usuarios WHERE correo = $1",
-      [correo]
-    );
+    const result = await pool.query("SELECT * FROM usuarios WHERE correo = $1", [correo]);
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: "Credenciales inválidas" });
@@ -61,49 +52,12 @@ const loginUser = async (req, res) => {
     const token = jwt.sign(
       { id: usuario.id, correo: usuario.correo },
       process.env.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      }
+      { expiresIn: "1h" }
     );
 
     res.status(200).json({ message: "Inicio de sesión exitoso", token });
   } catch (error) {
     res.status(500).json({ error: "Error en el servidor" });
-  }
-};
-
-const getCategorias = async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM categorias");
-    res.status(200).json(result.rows);
-  } catch (error) {
-    res.status(500).json({ error: "Error en el servidor" });
-  }
-};
-
-const createCategoria = async (req, res) => {
-  const { nombre } = req.body;
-
-  if (!nombre) {
-    return res.status(400).json({ error: "Faltan datos" });
-  }
-
-  try {
-    const result = await pool.query(
-      "INSERT INTO categorias (nombre) VALUES ($1) RETURNING *",
-      [nombre]
-    );
-    res
-      .status(201)
-      .json({
-        message: "Categoría creada exitosamente",
-        categoria: result.rows[0],
-      });
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ error: "Error en el servidor", details: error.message });
   }
 };
 
@@ -118,26 +72,10 @@ const getProductos = async (req, res) => {
 
 const createProducto = async (req, res) => {
   try {
-    const { nombre, descripcion, precio, categoria } = req.body;
+    const { nombre, descripcion, precio } = req.body;
 
-    if (!nombre || !descripcion || !precio || !categoria || !req.file) {
+    if (!nombre || !descripcion || !precio || !req.file) {
       return res.status(400).json({ error: "Faltan datos" });
-    }
-
-    const categoriasPermitidas = [
-      "Moda femenina",
-      "Moda masculina",
-      "FashionMiniPet",
-      "Artículos varios",
-    ];
-
-    if (!categoriasPermitidas.includes(categoria)) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "La categoría no es válida. Debe ser una de: Moda femenina, Moda masculina, FashionMiniPet, Artículos varios.",
-        });
     }
 
     console.log("Archivo recibido:", req.file);
@@ -145,29 +83,23 @@ const createProducto = async (req, res) => {
     const uploadResult = await cloudinary.uploader.upload_stream(
       { folder: "productos" },
       async (error, result) => {
-        console.error("Error al subir imagen a Cloudinary:", error); //probando errores
-        if (error)
-          return res.status(500).json({ error: "Error al subir la imagen" });
+        console.error("Error al subir imagen a Cloudinary:", error);
+        if (error) return res.status(500).json({ error: "Error al subir la imagen" });
 
         console.log("Resultado de la carga en Cloudinary:", result);
 
         try {
           const queryResult = await pool.query(
-            "INSERT INTO productos (nombre, descripcion, precio, categoria, imagen_url) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-            [nombre, descripcion, precio, categoria, result.secure_url]
+            "INSERT INTO productos (nombre, descripcion, precio, imagen_url) VALUES ($1, $2, $3, $4) RETURNING *",
+            [nombre, descripcion, precio, result.secure_url]
           );
-          console.log(
-            "Producto insertado en la base de datos:",
-            queryResult.rows[0]
-          ); //probando errores
-          res
-            .status(201)
-            .json({
-              message: "Producto creado exitosamente",
-              producto: queryResult.rows[0],
-            });
+          console.log("Producto insertado en la base de datos:", queryResult.rows[0]);
+          res.status(201).json({
+            message: "Producto creado exitosamente",
+            producto: queryResult.rows[0],
+          });
         } catch (dbError) {
-          console.error("Error en la base de datos:", dbError); //probando errores
+          console.error("Error en la base de datos:", dbError);
           res.status(500).json({ error: "Error en la base de datos" });
         }
       }
@@ -175,7 +107,7 @@ const createProducto = async (req, res) => {
 
     uploadResult.end(req.file.buffer);
   } catch (error) {
-    console.error("Error en la creación del producto:", error); //probando errores
+    console.error("Error en la creación del producto:", error);
     res.status(500).json({ error: "Error en el servidor" });
   }
 };
@@ -193,12 +125,10 @@ const createVenta = async (req, res) => {
       [usuario, JSON.stringify(productos), total]
     );
 
-    res
-      .status(201)
-      .json({
-        message: "Venta registrada exitosamente",
-        venta: result.rows[0],
-      });
+    res.status(201).json({
+      message: "Venta registrada exitosamente",
+      venta: result.rows[0],
+    });
   } catch (error) {
     res.status(500).json({ error: "Error en el servidor" });
   }
@@ -207,8 +137,6 @@ const createVenta = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
-  getCategorias,
-  createCategoria,
   getProductos,
   createProducto,
   createVenta,
