@@ -97,6 +97,13 @@ const createProducto = async (req, res) => {
       return res.status(400).json({ error: "Faltan datos" });
     }
 
+    // Verificar si la categoría existe
+    const categoriaResult = await pool.query("SELECT nombre FROM categorias WHERE nombre = $1", [categoria]);
+
+    if (categoriaResult.rows.length === 0) {
+      return res.status(400).json({ error: "Categoría no encontrada" });
+    }
+
     // Subir imagen a Cloudinary
     const uploadResult = await cloudinary.uploader.upload_stream(
       { folder: "productos" },
@@ -105,7 +112,7 @@ const createProducto = async (req, res) => {
 
         try {
           const queryResult = await pool.query(
-            "INSERT INTO productos (nombre, descripcion, precio, categoria, imagen) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            "INSERT INTO productos (nombre, descripcion, precio, categoria, imagen_url) VALUES ($1, $2, $3, $4, $5) RETURNING *",
             [nombre, descripcion, precio, categoria, result.secure_url]
           );
           res.status(201).json({ message: "Producto creado exitosamente", producto: queryResult.rows[0] });
