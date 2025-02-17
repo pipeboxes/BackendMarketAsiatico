@@ -76,8 +76,9 @@ const createCategoria = async (req, res) => {
     const result = await pool.query("INSERT INTO categorias (nombre) VALUES ($1) RETURNING *", [nombre]);
     res.status(201).json({ message: "Categoría creada exitosamente", categoria: result.rows[0] });
   } catch (error) {
-    res.status(500).json({ error: "Error en el servidor" });
-  }
+    console.error(error);
+    res.status(500).json({ error: "Error en el servidor", details: error.message });
+  }  
 };
 
 const getProductos = async (req, res) => {
