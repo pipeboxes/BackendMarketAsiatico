@@ -78,7 +78,7 @@ const createCategoria = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error en el servidor", details: error.message });
-  }  
+  }
 };
 
 const getProductos = async (req, res) => {
@@ -98,14 +98,12 @@ const createProducto = async (req, res) => {
       return res.status(400).json({ error: "Faltan datos" });
     }
 
-    // Verificar si la categoría existe
-    const categoriaResult = await pool.query("SELECT nombre FROM categorias WHERE nombre = $1", [categoria]);
+    const categoriasPermitidas = ["Moda femenina", "Moda masculina", "FashionMiniPet", "Artículos varios"];
 
-    if (categoriaResult.rows.length === 0) {
-      return res.status(400).json({ error: "Categoría no encontrada" });
+    if (!categoriasPermitidas.includes(categoria)) {
+      return res.status(400).json({ error: "La categoría no es válida. Debe ser una de: Moda femenina, Moda masculina, FashionMiniPet, Artículos varios." });
     }
 
-    // Subir imagen a Cloudinary
     const uploadResult = await cloudinary.uploader.upload_stream(
       { folder: "productos" },
       async (error, result) => {
