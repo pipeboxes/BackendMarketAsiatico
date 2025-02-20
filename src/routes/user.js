@@ -4,8 +4,8 @@ const {
   loginUser,
   getProductos,
   createProducto,
-  createVenta,
   upload,
+  deleteProducto,
 } = require("../controllers/user.js");
 
 const { schemaValidator, registerSchema, loginSchema, verifyToken } = require("../middlewares/schemaValidator.js");
@@ -17,7 +17,6 @@ router.post("/login", schemaValidator(loginSchema), loginUser);
 
 router.get("/productos", verifyToken, getProductos);
 router.post("/productos", verifyToken, upload.single("image"), createProducto);
-
-router.post("/ventas", verifyToken, createVenta);
+router.delete("/productos/:id", verifyToken, deleteProducto);
 
 module.exports = router;

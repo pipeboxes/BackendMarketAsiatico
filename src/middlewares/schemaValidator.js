@@ -21,15 +21,20 @@ const verifyToken = (req, res, next) => {
     return res.status(403).json({ error: "Token no proporcionado" });
   }
 
-  // Verificación del token JWT
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      console.error("Error al verificar el token:", err); 
+      console.error("Error al verificar el token:", err);
+      
+      if (err.name === "TokenExpiredError") {
+        return res.status(401).json({ error: "Sesión expirada. Por favor, inicia sesión nuevamente." });
+      }
+
       return res.status(401).json({ error: "Token inválido" });
     }
 
     req.userId = decoded.id;
-    console.log("Token válido, usuario decodificado:", decoded);
+    req.userEmail = decoded.correo;
+
     next();
   });
 };
@@ -38,7 +43,6 @@ const verifyToken = (req, res, next) => {
 const schemaValidator = (schema) => (req, res, next) => {
   const { error } = schema.validate(req.body);
 
-  // Si hay un error de validación, lo retornamos
   if (error) {
     console.error("Error de validación:", error.details[0].message);
     return res.status(400).json({ error: error.details[0].message });
@@ -46,4 +50,12 @@ const schemaValidator = (schema) => (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, schemaValidator, registerSchema, loginSchema };
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user.id, correo: user.correo },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+};
+
+module.exports = { verifyToken, schemaValidator, registerSchema, loginSchema, generateToken };

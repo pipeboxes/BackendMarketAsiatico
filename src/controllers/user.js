@@ -1,19 +1,16 @@
 const jwt = require("jsonwebtoken");
 const { pool } = require("../config/config.js");
 const bcrypt = require("bcryptjs");
-const { verifyToken } = require("../middlewares/schemaValidator.js");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Registrar usuario
 const registerUser = async (req, res) => {
   const { correo, clave } = req.body;
 
   if (!correo || !clave) {
     return res.status(400).json({ error: "Faltan datos" });
-  }
-  if (typeof clave !== "string") {
-    return res.status(400).json({ error: "La clave debe ser una cadena de texto" });
   }
   try {
     const hash = await bcrypt.hash(clave, 10);
@@ -21,17 +18,13 @@ const registerUser = async (req, res) => {
       "INSERT INTO usuarios (correo, clave) VALUES ($1, $2) RETURNING *",
       [correo, hash]
     );
-
-    res.status(201).json({
-      message: "Usuario creado exitosamente",
-      usuario: result.rows[0],
-    });
+    res.status(201).json({ message: "Usuario creado exitosamente", usuario: result.rows[0] });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: "Error en el servidor", details: error.message });
   }
 };
 
+// Login de usuario
 const loginUser = async (req, res) => {
   const { correo, clave } = req.body;
 
@@ -61,76 +54,61 @@ const loginUser = async (req, res) => {
   }
 };
 
+// Obtener productos
 const getProductos = async (req, res) => {
+  const userEmail = req.userEmail;
+
   try {
-    const result = await pool.query("SELECT * FROM productos");
+    const result = await pool.query("SELECT * FROM productos WHERE usuario_email = $1", [userEmail]);
     res.status(200).json(result.rows);
   } catch (error) {
     res.status(500).json({ error: "Error en el servidor" });
   }
 };
 
+// Crear producto
 const createProducto = async (req, res) => {
-  try {
-    const { nombre, descripcion, precio } = req.body;
+  const { nombre, descripcion, precio } = req.body;
+  const userEmail = req.userEmail;
 
-    if (!nombre || !descripcion || !precio || !req.file) {
-      return res.status(400).json({ error: "Faltan datos" });
-    }
-
-    console.log("Archivo recibido:", req.file);
-
-    const uploadResult = await cloudinary.uploader.upload_stream(
-      { folder: "productos" },
-      async (error, result) => {
-        console.error("Error al subir imagen a Cloudinary:", error);
-        if (error) return res.status(500).json({ error: "Error al subir la imagen" });
-
-        console.log("Resultado de la carga en Cloudinary:", result);
-
-        try {
-          const queryResult = await pool.query(
-            "INSERT INTO productos (nombre, descripcion, precio, imagen_url) VALUES ($1, $2, $3, $4) RETURNING *",
-            [nombre, descripcion, precio, result.secure_url]
-          );
-          console.log("Producto insertado en la base de datos:", queryResult.rows[0]);
-          res.status(201).json({
-            message: "Producto creado exitosamente",
-            producto: queryResult.rows[0],
-          });
-        } catch (dbError) {
-          console.error("Error en la base de datos:", dbError);
-          res.status(500).json({ error: "Error en la base de datos" });
-        }
-      }
-    );
-
-    uploadResult.end(req.file.buffer);
-  } catch (error) {
-    console.error("Error en la creación del producto:", error);
-    res.status(500).json({ error: "Error en el servidor" });
-  }
-};
-
-const createVenta = async (req, res) => {
-  const { usuario, productos, total } = req.body;
-
-  if (!usuario || !productos || productos.length === 0 || !total) {
+  if (!nombre || !descripcion || !precio || !req.file) {
     return res.status(400).json({ error: "Faltan datos" });
   }
 
-  try {
-    const result = await pool.query(
-      "INSERT INTO ventas (usuario, productos, total) VALUES ($1, $2, $3) RETURNING *",
-      [usuario, JSON.stringify(productos), total]
-    );
+  cloudinary.uploader.upload_stream({ folder: "productos" }, async (error, result) => {
+    if (error) return res.status(500).json({ error: "Error al subir la imagen" });
 
-    res.status(201).json({
-      message: "Venta registrada exitosamente",
-      venta: result.rows[0],
-    });
+    try {
+      const queryResult = await pool.query(
+        "INSERT INTO productos (nombre, descripcion, precio, imagen_url, usuario_email) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [nombre, descripcion, precio, result.secure_url, userEmail]
+      );
+      res.status(201).json({
+        message: "Producto creado exitosamente",
+        producto: queryResult.rows[0],
+      });
+    } catch (dbError) {
+      res.status(500).json({ error: "Error en la base de datos" });
+    }
+  }).end(req.file.buffer);
+};
+
+// Eliminar producto
+const deleteProducto = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query("SELECT * FROM productos WHERE id = $1", [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    await pool.query("DELETE FROM productos WHERE id = $1", [id]);
+
+    res.status(200).json({ message: "Producto eliminado exitosamente" });
   } catch (error) {
-    res.status(500).json({ error: "Error en el servidor" });
+    res.status(500).json({ error: "Error en el servidor al eliminar el producto" });
   }
 };
 
@@ -139,6 +117,6 @@ module.exports = {
   loginUser,
   getProductos,
   createProducto,
-  createVenta,
+  deleteProducto,
   upload,
 };
