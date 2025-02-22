@@ -3,6 +3,7 @@ const {
   registerUser,
   loginUser,
   getProductos,
+  getAllProductos,
   createProducto,
   upload,
   deleteProducto,
@@ -17,6 +18,7 @@ router.post("/login", schemaValidator(loginSchema), loginUser);
 
 router.get("/productos", verifyToken, getProductos);
 router.post("/productos", verifyToken, upload.single("image"), createProducto);
+router.get("/productos-publicos", getAllProductos);
 router.delete("/productos/:id", verifyToken, deleteProducto);
 
 module.exports = router;
