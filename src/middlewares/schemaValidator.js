@@ -1,5 +1,5 @@
-const Joi = require('joi');
-const jwt = require('jsonwebtoken');
+const Joi = require("joi");
+const jwt = require("jsonwebtoken");
 
 // Esquemas de validación
 const registerSchema = Joi.object({
@@ -14,7 +14,7 @@ const loginSchema = Joi.object({
 
 // Middleware de verificación del token
 const verifyToken = (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
+  const token = req.headers["authorization"]?.split(" ")[1];
 
   if (!token) {
     console.log("Token no proporcionado");
@@ -24,7 +24,7 @@ const verifyToken = (req, res, next) => {
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       console.error("Error al verificar el token:", err);
-      
+
       if (err.name === "TokenExpiredError") {
         return res.status(401).json({ error: "Sesión expirada. Por favor, inicia sesión nuevamente." });
       }
@@ -51,11 +51,7 @@ const schemaValidator = (schema) => (req, res, next) => {
 };
 
 const generateToken = (user) => {
-  return jwt.sign(
-    { id: user.id, correo: user.correo },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
+  return jwt.sign({ id: user.id, correo: user.correo }, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
 
 module.exports = { verifyToken, schemaValidator, registerSchema, loginSchema, generateToken };

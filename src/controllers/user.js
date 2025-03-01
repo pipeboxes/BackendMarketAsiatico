@@ -12,12 +12,22 @@ const registerUser = async (req, res) => {
   if (!correo || !clave) {
     return res.status(400).json({ error: "Faltan datos" });
   }
+
   try {
+    // Verificar si el correo ya está registrado
+    const existingUser = await pool.query("SELECT * FROM usuarios WHERE correo = $1", [correo]);
+
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: "Este correo ya está en uso, ¡inicia sesión o registra otro correo!" });
+    }
+
+    // Encriptar contraseña y registrar usuario
     const hash = await bcrypt.hash(clave, 10);
     const result = await pool.query(
       "INSERT INTO usuarios (correo, clave) VALUES ($1, $2) RETURNING *",
       [correo, hash]
     );
+
     res.status(201).json({ message: "Usuario creado exitosamente", usuario: result.rows[0] });
   } catch (error) {
     res.status(500).json({ error: "Error en el servidor", details: error.message });
@@ -39,7 +49,7 @@ const loginUser = async (req, res) => {
     const esValido = await bcrypt.compare(clave, usuario.clave);
 
     if (!esValido) {
-      return res.status(401).json({ error: "Credenciales inválidas" });
+      return res.status(401).json({ error: "Contraseña incorrecta, intente nuevamente." });
     }
 
     const token = jwt.sign(
@@ -66,7 +76,6 @@ const getProductos = async (req, res) => {
   }
 };
 
-// Obtener todos los productos
 // Obtener todos los productos (para el home)
 const getAllProductos = async (req, res) => {
   try {
