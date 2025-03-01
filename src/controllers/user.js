@@ -66,6 +66,17 @@ const getProductos = async (req, res) => {
   }
 };
 
+// Obtener todos los productos
+// Obtener todos los productos (para el home)
+const getAllProductos = async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM productos ORDER BY id DESC");
+    res.status(200).json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: "Error en el servidor al obtener los productos" });
+  }
+};
+
 // Crear producto
 const createProducto = async (req, res) => {
   const { nombre, descripcion, precio } = req.body;
@@ -116,6 +127,7 @@ module.exports = {
   registerUser,
   loginUser,
   getProductos,
+  getAllProductos,
   createProducto,
   deleteProducto,
   upload,

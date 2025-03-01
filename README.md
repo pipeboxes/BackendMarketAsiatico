@@ -1,5 +1,7 @@
 Proyecto Marketplace
 
+Deploy on Render: https://proyectofinaldl.onrender.com/
+
 Este proyecto es un marketplace con temática asiática (japonesa/coreana) donde los usuarios pueden ver productos como ramen, té matcha, pocky, entre otros. Cuenta con funcionalidades como login, registro, carrito de compras, favoritos y un diseño limpio y atractivo.
 
 Integrantes:
